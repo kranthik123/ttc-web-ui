@@ -235,7 +235,7 @@
 			});
         </script>
         <script type="text/javascript">
-            $.getJSON("http://34.68.115.152/", function(data) {
+            $.getJSON("http://146.148.71.6/", function(data) {
                 $.each( data, function( key, val ) {
                     $("#productselect").append("<option data-index='"+key+"' value='"+val+"'>"+val+"</option>")
                 });

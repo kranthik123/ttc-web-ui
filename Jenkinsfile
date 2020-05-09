@@ -11,8 +11,8 @@ pipeline {
         ANCHORE_CLI_PASS='foobar'
 
     }
-    stages {
-        stage('cleanup') {
+    prods {
+        prod('cleanup') {
             steps {
                 script{
                     echo "Stopping any old container to release ports needs for the new builds"
@@ -22,7 +22,7 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
+        prod('Build') {
             steps {
                 script {
                     echo "Building Docker image"
@@ -32,7 +32,7 @@ pipeline {
                 }
             }
         }
-        stage('run_container') {
+        prod('run_container') {
             steps {
                 script{
                     echo "Starting Docker Container locally for testing the build"
@@ -42,7 +42,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Scanner'){
+        prod('SonarQube Scanner'){
             steps{
                 script{
                     withSonarQubeEnv('SonarQube_Server') {
@@ -55,7 +55,7 @@ pipeline {
                 }
             }
         }
-        stage('build-test') {
+        prod('build-test') {
             steps {
                 withPythonEnv('python3') {
                     echo "Testing the new build to validate code and provide test coverage"
@@ -63,15 +63,15 @@ pipeline {
                 }
             }
         }
-//        stage('BDD-test') {
+//        prod('BDD-test') {
 //            steps {
 //                script {
-//                    sh "docker run -d kranthik123/bdd_py3_test_suite:v01"
+//                    sh "docker run -d kranthik123/ttc_bdd:v01"
 //                    sh "docker logs --follow \$(docker ps -l -q)"
 //                }
 //            }
 //        }
-        stage('push-image') {
+        prod('push-image') {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'DockerHubCreds') {
@@ -81,7 +81,7 @@ pipeline {
                 }
             }
         }
-        stage('Deploy-To-Dev') {
+        prod('Deploy-To-Dev') {
             steps {
               sh "cd \$WORKSPACE/manifests && pwd && ls -l && cat dev_deployment.yaml && sed -i 's/ttc_app:latest/ttc_app:${env.BUILD_ID}/g' \$WORKSPACE/manifests/dev_deployment.yaml"
               sh "cat \$WORKSPACE/manifests/dev_deployment.yaml"
@@ -90,12 +90,12 @@ pipeline {
               echo "Deploying to Dev Kubernetes namespace completed successfully."
             }
         }
-        stage('Trivy - Container Security Scanner') {
+        prod('Trivy - Container Security Scanner') {
             steps{
                 sh "/usr/local/bin/trivy kranthik123/ttc_app:${env.BUILD_ID}"
                 }
             }
-//        stage('Anchore - Container Vulnerability Scanner') {
+//        prod('Anchore - Container Vulnerability Scanner') {
 //            steps {
 //                sh 'set'
 //                script {
@@ -114,23 +114,23 @@ pipeline {
 //                }
 //            }
 //        }
-//        stage('promote-to-stage') {
+//        prod('promote-to-prod') {
 //            steps{
 //                timeout(time: 10, unit: "MINUTES") {
-//                    input message: 'Do you want to approve the deploy in Stage?', ok: 'Yes'
+//                    input message: 'Do you want to approve the deploy in prod?', ok: 'Yes'
 //                }
 //            }
 //        }
-        stage('Deploy-To-stage') {
+        prod('Deploy-To-prod') {
             steps {
-                sh "cd \$WORKSPACE/manifests && pwd && ls -l && cat stage_deployment.yaml && sed -i 's/ttc_app:latest/ttc_app:${env.BUILD_ID}/g' \$WORKSPACE/manifests/stage_deployment.yaml"
-                sh "cat \$WORKSPACE/manifests/stage_deployment.yaml"
-                echo "Deploying to Stage Kubernetes namespace."
-                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: "manifests/stage_deployment.yaml", credentialsId: env.CREDENTIALS_ID, verifyDeployments: false])
-                echo "Deploying to Stage Kubernetes namespace completed successfully."
+                sh "cd \$WORKSPACE/manifests && pwd && ls -l && cat prod_deployment.yaml && sed -i 's/ttc_app:latest/ttc_app:${env.BUILD_ID}/g' \$WORKSPACE/manifests/prod_deployment.yaml"
+                sh "cat \$WORKSPACE/manifests/prod_deployment.yaml"
+                echo "Deploying to prod Kubernetes namespace."
+                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: "manifests/prod_deployment.yaml", credentialsId: env.CREDENTIALS_ID, verifyDeployments: false])
+                echo "Deploying to prod Kubernetes namespace completed successfully."
             }
         }
-//        stage('promote-to-prod') {
+//        prod('promote-to-prod') {
 //            steps{
 //                // Input Step
 //                timeout(time: 10, unit: "MINUTES") {
@@ -138,7 +138,7 @@ pipeline {
 //                }
 //            }
 //        }
-        stage('Deploy-To-prod') {
+        prod('Deploy-To-prod') {
             steps {
                 sh "cd \$WORKSPACE/manifests && pwd && ls -l && cat prod_deployment.yaml && sed -i 's/ttc_app:latest/ttc_app:${env.BUILD_ID}/g' \$WORKSPACE/manifests/prod_deployment.yaml"
                 sh "cat \$WORKSPACE/manifests/prod_deployment.yaml"
@@ -149,7 +149,7 @@ pipeline {
         }
     }
       post {
-        always {jiraSendBuildInfo  branch: 'IBC-23', site: 'ibcstage.atlassian.net'}
+        always {jiraSendBuildInfo  branch: 'IBC-23', site: 'ibcprod.atlassian.net'}
         success {echo 'The job run was successful.'}
         failure {echo 'The job run was unsuccessful.'}
         unstable {echo 'The Job run but marked as unstable'}

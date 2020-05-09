@@ -1,5 +1,5 @@
 import unittest
-from flask_app import app
+from ttc_app import app
 
 class TestCases(unittest.TestCase):
     def test_home(self):
@@ -9,7 +9,7 @@ class TestCases(unittest.TestCase):
 
     def test_other(self):
         tester = app.test_client(self)
-        response = tester.get('a', content_type='html/text')
+        response = tester.get('bad_endpoint', content_type='html/text')
         self.assertEqual(response.status_code, 404)
 
 if __name__ == '__main__':
