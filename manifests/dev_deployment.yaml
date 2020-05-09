@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ttc-app-dev
+  namespace: ttc-dev
+  labels:
+    app: ttc-app-dev
+spec:
+  selector:
+    matchLabels:
+      app: ttc-app-dev
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: ttc-app-dev
+        tier: web
+    spec:
+      containers:
+      - name: ttc-app-dev
+        image: kranthik123/ttc_app:latest
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ttc-app-dev-svc
+  namespace: ttc-dev
+  labels:
+    service: ttc-app-dev-svc
+spec:
+  selector:
+    app: ttc-app-dev
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 5000
+  type: LoadBalancer
+
