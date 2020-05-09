@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ttc-app-prod
-  namespace: ttc-prod
+  name: ttc-app-stage
+  namespace: ttc-stage
   labels:
-    app: ttc-app-prod
+    app: ttc-app-stage
 spec:
   selector:
     matchLabels:
-      app: ttc-app-prod
+      app: ttc-app-stage
       tier: web
   template:
     metadata:
       labels:
-        app: ttc-app-prod
+        app: ttc-app-stage
         tier: web
     spec:
       containers:
-      - name: ttc-app-prod
+      - name: ttc-app-stage
         image: kranthik123/ttc_app:latest
         ports:
         - containerPort: 5000
@@ -27,13 +27,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ttc-app-prod-svc
-  namespace: ttc-prod
+  name: ttc-app-stage-svc
+  namespace: ttc-stage
   labels:
-    service: ttc-app-prod-svc
+    service: ttc-app-stage-svc
 spec:
   selector:
-    app: ttc-app-prod
+    app: ttc-app-stage
   ports:
   - protocol: "TCP"
     port: 80
